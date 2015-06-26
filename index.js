@@ -28,10 +28,24 @@ async function main() {
     version: 'v1beta2'
   });
   var service = proxy(dataset);
+  async function transaction(asyncFn) {
+    let finished, trans;
+    await new Promise((accept, reject) => {
+      dataset.runInTransaction((trans, done) => {
+        let proxyTrans = proxy(trans);
+        asyncFn(proxyTrans).
+          then(() => done()).
+          catch((err) => done(err));
+      }, function(err) {
+        if (err) return reject(err);
+        accept();
+      });
+    });
+  }
 
   // create a entity group of 1k objects
-  var iters = 1000;
-  var number = 10;
+  var iters = 10;
+  var number = 50;
   var ops = [];
 
   while(iters--) {
@@ -39,7 +53,9 @@ async function main() {
     var objects = [];
 
     for (var i = 0; i < number; i++) {
-      console.time('create');
+
+      var trans = proxy((await service.runInTransaction))
+
       objects.push({
         key: dataset.key([root, number]),
         data: {
@@ -53,16 +69,17 @@ async function main() {
 
     // Creates the objects and assigns the ids to them...
     await service.insert(objects);
-    console.timeEnd('create');
+
+    // run each update in it's own transaction...
 
     // iterate over all the objects and mark them as running state (in parallel)
-    console.time('update');
-    let updateOpts = await Promise.all(objects.map(async (obj) => {
-      obj.data.state = 'running';
-      return service.update(obj);
+    let updateOpts = await Promise.all(objects.map(async (original) => {
+      await transaction(async (transaction) => {
+        let obj = await transaction.get(original.key);
+        obj.data.state = 'running';
+        await trans.update(obj);
+      });
     }));
-    console.timeEnd('update');
-
   }
 }
 
