@@ -30,17 +30,18 @@ async function main() {
   var service = proxy(dataset);
 
   // create a entity group of 1k objects
-  var iters = 20;
-  var number = 100;
+  var iters = 5;
+  var number = 500;
   var ops = [];
 
   while(iters--) {
+    var root = slug.v4();
     var objects = [];
 
     for (var i = 0; i < number; i++) {
       console.time('create');
       objects.push({
-        key: dataset.key([slug.v4(), number]),
+        key: dataset.key([root, number]),
         data: {
           state: 'pending',
           payload: {
