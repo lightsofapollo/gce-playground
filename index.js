@@ -20,7 +20,7 @@ var gcloud = require('gcloud')({
 
 var slug = require('slugid');
 
-const KIND = 'task';
+const KIND = 'taskfoo';
 
 async function main() {
 
