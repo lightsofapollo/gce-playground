@@ -62,8 +62,8 @@ async function main() {
   }
 
   // create a entity group of 1k objects
-  var iters = 100;
-  var number = 100;
+  var iters = 50;
+  var number = 500;
   var ops = [];
 
   var insertOpts = [];
@@ -89,6 +89,7 @@ async function main() {
       trans.save(objects);
     }));
   }
+  console.log('inserted', iters * number);
   await Promise.all(insertOpts);
   console.timeEnd(`insert`);
 }
