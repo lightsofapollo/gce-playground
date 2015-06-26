@@ -30,8 +30,8 @@ async function main() {
   var service = proxy(dataset);
 
   // create a entity group of 1k objects
-  var iters = 5;
-  var number = 500;
+  var iters = 1000;
+  var number = 10;
   var ops = [];
 
   while(iters--) {
