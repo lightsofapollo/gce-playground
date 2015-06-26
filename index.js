@@ -38,6 +38,7 @@ async function main() {
     var objects = [];
 
     for (var i = 0; i < number; i++) {
+      console.time('create');
       objects.push({
         key: dataset.key([slug.v4(), number]),
         data: {
@@ -51,14 +52,16 @@ async function main() {
 
     // Creates the objects and assigns the ids to them...
     await service.insert(objects);
+    console.timeEnd('create');
 
     // iterate over all the objects and mark them as running state (in parallel)
+    console.time('update');
     let updateOpts = await Promise.all(objects.map(async (obj) => {
       obj.data.state = 'running';
       return service.update(obj);
     }));
+    console.timeEnd('update');
 
-    console.log(updateOpts);
   }
 }
 
