@@ -62,8 +62,8 @@ async function main() {
   }
 
   // create a entity group of 1k objects
-  var iters = 1;
-  var number = 2
+  var iters = 15;
+  var number = 500;
   var ops = [];
 
   while(iters--) {
