@@ -38,8 +38,22 @@ async function main() {
       dataset.runInTransaction((trans, done) => {
         let proxyTrans = proxy(trans);
         asyncFn(proxyTrans).
-          then(() => done()).
-          catch((err) => done(err));
+          then(() => {
+            done();
+          }).
+          catch((err) => {
+            // This is pretty ugly but implements auto-rollback on transaction
+            // errors and proper propagation of errors via the promise chain.
+            return proxyTrans.rollback().
+              then(() => {
+                done(err);
+                reject(err);
+              }).
+              catch((rollbackErr) => {
+                done(rollbackErr);
+                reject(rollbackErr);
+              });
+          });
       }, function(err) {
         if (err) return reject(err);
         accept();
@@ -48,11 +62,12 @@ async function main() {
   }
 
   // create a entity group of 1k objects
-  var iters = 10;
-  var number = 500;
+  var iters = 1;
+  var number = 2
   var ops = [];
 
   while(iters--) {
+    console.time(`iteration ${iters}`);
     var root = slug.v4();
     var objects = [];
 
@@ -73,13 +88,13 @@ async function main() {
 
     // Creates the objects and assigns the ids to them...
     console.time('create');
-    let inserted = await service.save(objects[0]);
+    let inserted = await service.save(objects);
     console.timeEnd('create');
 
     // run each update in it's own transaction...
 
     // iterate over all the objects and mark them as running state (in parallel)
-    console.time('update');
+    console.time('trans');
     await transaction(async (transaction) => {
       let updates = [];
       console.time('get');
@@ -89,9 +104,10 @@ async function main() {
         updates.push(obj);
       }));
       console.timeEnd('get');
-      await transaction.update(updates);
+      transaction.update(updates);
     });
-    console.timeEnd('update');
+    console.timeEnd('trans');
+    console.timeEnd(`iteration ${iters}`);
   }
 }
 
