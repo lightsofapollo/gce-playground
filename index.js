@@ -20,13 +20,17 @@ var gcloud = require('gcloud')({
 
 var slug = require('slugid');
 
+const KIND = 'task';
+
 async function main() {
 
   var datastore = gcloud.datastore;
   var dataset = datastore.dataset({
     projectId: process.env.GCLOUD_PROJECT_ID,
-    version: 'v1beta2'
+    version: 'v1beta2',
+    namespace: 'testing'
   });
+
   var service = proxy(dataset);
   async function transaction(asyncFn) {
     let finished, trans;
@@ -44,8 +48,8 @@ async function main() {
   }
 
   // create a entity group of 1k objects
-  var iters = 10;
-  var number = 500;
+  var iters = 5;
+  var number = 250;
   var ops = [];
 
   while(iters--) {
@@ -54,9 +58,10 @@ async function main() {
 
     for (var i = 0; i < number; i++) {
       var trans = proxy((await service.runInTransaction))
+      let key = dataset.key([KIND, root, KIND, String(i+1)])
 
       objects.push({
-        key: dataset.key([root, number]),
+        key: key,
         data: {
           state: 'pending',
           payload: {
@@ -68,7 +73,7 @@ async function main() {
 
     // Creates the objects and assigns the ids to them...
     console.time('create');
-    await service.insert(objects);
+    let inserted = await service.save(objects[0]);
     console.timeEnd('create');
 
     // run each update in it's own transaction...
@@ -76,11 +81,13 @@ async function main() {
     // iterate over all the objects and mark them as running state (in parallel)
     console.time('update');
     await transaction(async (transaction) => {
+      let updates = [];
       await Promise.all(objects.map(async (original) => {
         let obj = await transaction.get(original.key);
         obj.data.state = 'running';
-        await trans.update(obj);
+        updates.push(obj);
       }));
+      await transaction.update(updates);
     });
     console.timeEnd('update');
   }
