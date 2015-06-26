@@ -44,8 +44,8 @@ async function main() {
   }
 
   // create a entity group of 1k objects
-  var iters = 10;
-  var number = 50;
+  var iters = 1;
+  var number = 1;
   var ops = [];
 
   while(iters--) {
@@ -75,13 +75,13 @@ async function main() {
 
     // iterate over all the objects and mark them as running state (in parallel)
     console.time('update');
-    let updateOpts = await Promise.all(objects.map(async (original) => {
-      await transaction(async (transaction) => {
+    await transaction(async (transaction) => {
+      await Promise.all(objects.map(async (original) => {
         let obj = await transaction.get(original.key);
         obj.data.state = 'running';
         await trans.update(obj);
-      });
-    }));
+      }));
+    });
     console.timeEnd('update');
   }
 }
