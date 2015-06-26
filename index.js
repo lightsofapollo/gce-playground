@@ -48,8 +48,8 @@ async function main() {
   }
 
   // create a entity group of 1k objects
-  var iters = 5;
-  var number = 250;
+  var iters = 10;
+  var number = 500;
   var ops = [];
 
   while(iters--) {
