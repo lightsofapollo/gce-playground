@@ -82,11 +82,13 @@ async function main() {
     console.time('update');
     await transaction(async (transaction) => {
       let updates = [];
+      console.time('get');
       await Promise.all(objects.map(async (original) => {
         let obj = await transaction.get(original.key);
         obj.data.state = 'running';
         updates.push(obj);
       }));
+      console.timeEnd('get');
       await transaction.update(updates);
     });
     console.timeEnd('update');
