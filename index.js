@@ -20,7 +20,7 @@ var gcloud = require('gcloud')({
 
 var slug = require('slugid');
 
-const KIND = 'taskfoo';
+const KIND = 'taskfoo2';
 
 async function main() {
 
@@ -63,7 +63,7 @@ async function main() {
 
   // create a entity group of 1k objects
   var iters = 10;
-  var number = 1000;
+  var number = 499;
   var ops = [];
   var root = slug.v4();
 
@@ -71,9 +71,9 @@ async function main() {
     console.time(`iteration ${iters}`);
     var trans = proxy((await service.runInTransaction))
     console.log('!!')
+    var objects = [];
     await transaction(async (trans) => {
       for (var i = 0; i < number; i++) {
-        var objects = [];
         let key = dataset.key([KIND, root, KIND, String(i+1)])
         objects.push({
           key: key,
