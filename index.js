@@ -62,18 +62,19 @@ async function main() {
   }
 
   // create a entity group of 1k objects
-  var iters = 10;
-  var number = 499;
+  var iters = 100;
+  var number = 100;
   var ops = [];
-  var root = slug.v4();
 
+  var insertOpts = [];
+
+  console.time(`insert`);
   while(iters--) {
-    console.time(`iteration ${iters}`);
-    var trans = proxy((await service.runInTransaction))
-    console.log('!!')
-    var objects = [];
-    await transaction(async (trans) => {
-      for (var i = 0; i < number; i++) {
+    let root = slug.v4();
+    let trans = proxy((await service.runInTransaction))
+    let objects = [];
+    insertOpts.push(transaction(async (trans) => {
+      for (let i = 0; i < number; i++) {
         let key = dataset.key([KIND, root, KIND, String(i+1)])
         objects.push({
           key: key,
@@ -86,9 +87,10 @@ async function main() {
         });
       }
       trans.save(objects);
-    });
-    console.timeEnd(`iteration ${iters}`);
+    }));
   }
+  await Promise.all(insertOpts);
+  console.timeEnd(`insert`);
 }
 
 main().catch((err) => {
