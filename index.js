@@ -53,7 +53,6 @@ async function main() {
     var objects = [];
 
     for (var i = 0; i < number; i++) {
-
       var trans = proxy((await service.runInTransaction))
 
       objects.push({
@@ -68,11 +67,14 @@ async function main() {
     }
 
     // Creates the objects and assigns the ids to them...
+    console.time('create');
     await service.insert(objects);
+    console.timeEnd('create');
 
     // run each update in it's own transaction...
 
     // iterate over all the objects and mark them as running state (in parallel)
+    console.time('update');
     let updateOpts = await Promise.all(objects.map(async (original) => {
       await transaction(async (transaction) => {
         let obj = await transaction.get(original.key);
@@ -80,6 +82,7 @@ async function main() {
         await trans.update(obj);
       });
     }));
+    console.timeEnd('update');
   }
 }
 
