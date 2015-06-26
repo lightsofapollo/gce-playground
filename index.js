@@ -96,14 +96,17 @@ async function main() {
     // iterate over all the objects and mark them as running state (in parallel)
     console.time('trans');
     await transaction(async (transaction) => {
-      let updates = [];
-      console.time('get');
-      await Promise.all(objects.map(async (original) => {
-        let obj = await transaction.get(original.key);
-        obj.data.state = 'running';
-        updates.push(obj);
-      }));
-      console.timeEnd('get');
+      let updates = objects.map((up) => {
+        up.data.state = 'running';
+        return up;
+      });
+      //console.time('get');
+      //await Promise.all(objects.map(async (original) => {
+        //let obj = await transaction.get(original.key);
+        //obj.data.state = 'running';
+        //updates.push(obj);
+      //}));
+      //console.timeEnd('get');
       transaction.update(updates);
     });
     console.timeEnd('trans');
